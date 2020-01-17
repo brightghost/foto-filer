@@ -14,7 +14,7 @@
 # export VERBOSE=0
 # export sw_cleandupes_verbosity=1
 
-echo "value of sw_cleandupes_verbosity: " $sw_cleandupes_verbosity
+# echo "value of sw_cleandupes_verbosity: " $sw_cleandupes_verbosity
 if [[ $sw_cleandupes_verbosity -eq "1" ]]; then
 	echo "setting LOG_INFO"
 	LOG_INFO=0
@@ -29,7 +29,7 @@ else
 	hash_func='md5sum'
 fi
 
-[[ $iLOG_VERBOSE ]] && echo "Selected hash function: $hash_func"
+[[ $LOG_VERBOSE ]] && echo "Selected hash function: $hash_func"
 
 export hash_func
 
@@ -41,29 +41,40 @@ clean_dupes () {
         # parameters, so we need to recombine them before operating on the
         # path.
 	[[ $LOG_VERBOSE ]] && echo "executing clean_dupes with arguments $*"
+	# rebuild the file path provided
 	f="$(basename "$*")"
 	# extension
-	fe="${f##*.}"
+	fext="${f##*.}"
 	# 'primary' filename w/o ext.
 	ff="${f%-[1-9].*}"
 	fff="${ff% [1-9].*}"
 	# recomposed expected priamry filename
-	fp="${fff}.${fe}"
+	fp="${fff}.${fext}"
 	[[ $LOG_VERBOSE ]] && echo "Searching for suspected original filename $fp"
+
+	# TODO function get_expected_filepath(file) {
+
 	# use exiftool to construct a path where the original is expected to be found from EXIF tag.
 	# ex: 2016/01/2016-01-07/DSCF7192.JPG
 	expected_path="$(exiftool -s -S -d "%Y/%m/%Y-%m-%d" -DateTimeOriginal "$1")"
 	expected_orig="./$expected_path/$fp"
-	[[ $LOG_VERBOSE ]] && echo "Checking if potential original file exists at $expected_orig" 
+	[[ $LOG_VERBOSE ]] && echo "Checking if potential original file exists at $expected_orig"
 	if [[ -f $expected_orig ]]; then
 		[[ $LOG_VERBOSE ]] && echo "Located original. Testing uniqueness."
+	# }
+		# TODO function compare_files(filea,fileb) {
 		h=$($hash_func "$1" | awk '{ print $1 }')
 		hp=$($hash_func "$expected_orig" | awk '{ print $1 }')
 		[[ $LOG_VERBOSE ]] && echo "Comparing hashes. a: $h b: $hp."
+
+
 		if [[ $h == $hp ]]; then
 			[[ $LOG_INFO ]] && echo "$1 is identical to $fp. Cleaning up."
+
+			# TODO function file_duplicate(file) {
 			mkdir -p "_duplicate_images"
 			mv -i "$1" "_duplicate_images/"
+			# }
 		else
 			[[ $LOG_INFO ]] && echo "Original found for $1, but hashes differ. Leaving in place."
 		fi

@@ -7,12 +7,17 @@
 # exiftool -r '-Directory<DateTimeOriginal' -d _sorted/%Y/%m/%Y-%m-%d "$1"
 
 # org into dated folder structure; no change to filename except for dupes
-# which will just be appended e.g. with '-1'. this script makes no attempt 
+# which will just be appended e.g. with '-1'. this script makes no attempt
 # to determine if these dupes are unique. see cleanup-duplicates.sh for that.
 echo "Sorting image files..."
 # exiftool will handle all the creation of organizational folders.
-exiftool -d "_sorted/%Y/%m/%Y-%m-%d/%%f%%-c.%%e" -r '-FileName<DateTimeOriginal' "$1"
 
+# TODO function file_photos(in_directory) {
+exiftool -d "_sorted/%Y/%m/%Y-%m-%d/%%f%%-c.%%e" -r '-FileName<DateTimeOriginal' "$1"
+# }
+
+
+# TODO just scrap this for now, build something better if needed in the future
 echo "Collecting .xmp files..."
 mkdir -p "_xmp"
 XMPDIR="_xmp"
@@ -23,7 +28,7 @@ for f in $XMPTMP/*; do
 	echo "Checking if $f is unique..."
 	if [[ ! -f "$XMPDIR/$(basename $f)" ]]; then
 		echo "moving unique xmp file to $XMPDIR"
-		mv -n "$f" "$XMPDIR/" 
+		mv -n "$f" "$XMPDIR/"
 	else
 		th=$(md5sum "$XMPDIR/$(basename $f)" | awk '{ print $1 }')
 		sh=$(md5sum "$f" | awk '{ print $1 }')
@@ -39,7 +44,8 @@ for f in $XMPTMP/*; do
 	fi
 done
 rmdir "$XMPTMP"
-		
-	
+
+# TODOfunction clean_empty_subdirs(parent_dir) {
 echo "Deleting empty directories..."
 find "$1" -mindepth 1 type d -empty -print -delete
+# }
